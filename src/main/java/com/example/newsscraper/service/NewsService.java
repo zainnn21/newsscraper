@@ -10,7 +10,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlParagraph;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -77,28 +76,27 @@ public class NewsService {
 
 
     public List<Article> fetchArticlesFromIndex() throws IOException {
+        List<String> urls = new ArrayList<>();
         List<Article> articles = new ArrayList<>();
+
+        // Kumpulkan URL dari halaman utama
         Document document = Jsoup.connect("https://www.bisnis.com/index").get();
-        for (Element item : document.select(".col-custom.left")) {
+        for (Element item : document.select(".list-news.indeks-new li")) {
             String url = item.select(".col-sm-8 a").attr("href");
-            String title = item.select(".col-sm-8 a").attr("title");
-//            String publishedDt = item.select("h2").attr("small");
-//            String publishedDate = publishedDt.substring(publishedDt.indexOf(":") +2).trim();
-//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MM yyyy");
-//            LocalDateTime pubDate = LocalDateTime.parse(publishedDate, formatter);
-//            LocalDate pubDt = pubDate.toLocalDate();
+            urls.add(url);
+        }
 
-            long articleTimestamp = Instant.now().getEpochSecond();
-
+        // Iterasi melalui daftar URL dan ambil konten untuk setiap URL
+        for (String url : urls) {
             if (articleRepository.existsByUrl(url)){
                 System.out.println("URL already exists, skipping: " + url);
-                continue; // Skip proses insert dan lanjut ke looping berikutnya
+                continue; // Skip proses insert dan lanjut ke URL berikutnya
             }
+
             Article article = new Article();
             article.setUrl(url);
-            article.setTitle(title);
-            article.setArticleTs(articleTimestamp);
-//            article.setPublishedDate(pubDt);
+            article.setTitle("");
+            article.setArticleTs(Instant.now().getEpochSecond());
             article.setContent(fetchContentFromUrlWithXPath(url));
             articles.add(article);
             articleRepository.save(article);
