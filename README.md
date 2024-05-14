@@ -15,14 +15,14 @@ NewsScraper is an application used to fetch and store news articles from various
 - Java JDK (version 8 or higher)
 - MySQL
 - Maven
+- Docker
+- Docker Compose
 
 ### Clone the Repository:
 Run the following command to clone the repository:
 `
 git clone https://github.com/username/news-scraper.git
 `
-
-### Configure the Database:
 
 ### Configure the Database:
 
@@ -44,11 +44,12 @@ You can use the following SQL script to create the necessary tables:
 
 3. Configure the database connection in the `application.properties` file.
 
-### Run the Application:
+### Run the Application with Docker:
 
-Navigate to the project directory and run the following command:
+1. Navigate to the project directory:
 `cd news-scraper`
-`mvn spring-boot:run`
+2. Build and start the Docker containers using Docker Compose:
+`docker-compose up --build`
 
 ## Usage
 
