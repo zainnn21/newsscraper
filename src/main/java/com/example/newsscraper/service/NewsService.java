@@ -78,19 +78,24 @@ public class NewsService {
     public List<Article> fetchArticlesFromIndex() throws IOException {
         List<Article> articles = new ArrayList<>();
         Document document = Jsoup.connect("https://www.bisnis.com/index").get();
-        for (Element item : document.select(".col-sm-8 a")) {
+        for (Element item : document.select(".col-custom.left")) {
 
-            String url = item.select("a").attr("href");
-            String title = item.select("a").attr("title");
+            String url = item.select(".col-sm-8 a").attr("href");
+            String title = item.select(".col-sm-8 a").attr("title");
+//            String publishedDt = item.select("h2").attr("small");
+//            String publishedDate = publishedDt.substring(publishedDt.indexOf(":") +2).trim();
+//            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MM yyyy");
+//            LocalDateTime pubDate = LocalDateTime.parse(publishedDate, formatter);
+//            LocalDate pubDt = pubDate.toLocalDate();
 
-            // Menggunakan waktu saat ini sebagai timestamp untuk artikel
             long articleTimestamp = Instant.now().getEpochSecond();
 
             Article article = new Article();
             article.setUrl(url);
             article.setTitle(title);
             article.setArticleTs(articleTimestamp);
-            article.setContent("");
+//            article.setPublishedDate(pubDt);
+            article.setContent(fetchContentFromUrlWithXPath(url));
 
             articles.add(article);
             articleRepository.save(article);
