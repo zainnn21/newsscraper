@@ -6,6 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -18,18 +22,24 @@ public class Article {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
+
+    @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false, length = 255, unique = true)
+    @Column(nullable = false, unique = true)
     private String url;
 
     @Lob
-    @Column(nullable = false)
     private String content;
+
+    @Lob
+    private String summary;
 
     @Column(name = "article_ts", nullable = false)
     private Long articleTs;
+
+    @Column(name = "published_date")
+    private LocalDate publishedDate;
 
     @Column(nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private java.sql.Timestamp inserted;

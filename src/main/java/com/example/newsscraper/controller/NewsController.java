@@ -13,13 +13,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/news")
 public class NewsController {
-
     @Autowired
     private NewsService newsService;
 
-    @GetMapping("/fetch")
-    public List<Article> fetchArticles() throws IOException{
-        // Mengambil artikel dari RSS feed
+    @GetMapping("/fetch-rss")
+    public List<Article> fetchArticlesFromRss() throws IOException {
         return newsService.fetchArticlesFromRss();
+    }
+
+    @GetMapping("/fetch-index")
+    public List<Article> fetchArticlesFromIndex() throws IOException {
+        return newsService.fetchArticlesFromIndex();
     }
 }
