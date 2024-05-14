@@ -6,10 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Date;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 
+/**
+ * Kelas model yang mewakili sebuah artikel berita.
+ */
 @Setter
 @Getter
 @NoArgsConstructor

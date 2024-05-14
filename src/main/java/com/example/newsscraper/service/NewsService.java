@@ -22,13 +22,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-
+/**
+ * Kelas service untuk mengambil artikel berita dari RSS Feed dan halaman index.
+ */
 @Service
 public class NewsService {
 
     @Autowired
     private ArticleRepository articleRepository;
 
+    /**
+     * Mengambil artikel dari RSS Feed.
+     *
+     * @return Daftar artikel yang diambil dari RSS Feed
+     * @throws IOException jika terjadi kesalahan I/O saat pengambilan data
+     */
     public List<Article> fetchArticlesFromRss() throws IOException {
         // Membuat daftar kosong untuk menyimpan artikel yang diambil dari RSS feed
         List<Article> articles = new ArrayList<>();
@@ -75,47 +83,72 @@ public class NewsService {
     }
 
 
+    /**
+     * Mengambil artikel dari halaman indeks.
+     *
+     * @return Daftar artikel yang diambil dari halaman indeks
+     * @throws IOException jika terjadi kesalahan I/O saat pengambilan data
+     */
     public List<Article> fetchArticlesFromIndex() throws IOException {
         List<String> urls = new ArrayList<>();
         List<Article> articles = new ArrayList<>();
+        List<String> titles = new ArrayList<>();
 
         // Kumpulkan URL dari halaman utama
         Document document = Jsoup.connect("https://www.bisnis.com/index").get();
         for (Element item : document.select(".list-news.indeks-new li")) {
             String url = item.select(".col-sm-8 a").attr("href");
+            String title = item.select(".col-sm-8 a").text();
             urls.add(url);
+            titles.add(title);
         }
 
         // Iterasi melalui daftar URL dan ambil konten untuk setiap URL
-        for (String url : urls) {
+        for (int i = 0; i < urls.size(); i++) {
+            String url = urls.get(i);
+            String title = titles.get(i);
             if (articleRepository.existsByUrl(url)){
+                // Jika artikel dengan URL yang sama sudah ada, lewati proses pengambilan artikel baru
                 System.out.println("URL already exists, skipping: " + url);
                 continue; // Skip proses insert dan lanjut ke URL berikutnya
             }
 
+            // Buat objek Article untuk artikel baru
             Article article = new Article();
             article.setUrl(url);
-            article.setTitle("");
+            article.setTitle(title);
             article.setArticleTs(Instant.now().getEpochSecond());
             article.setContent(fetchContentFromUrlWithXPath(url));
             articles.add(article);
             articleRepository.save(article);
         }
+        // Mengembalikan daftar artikel yang telah diambil dan disimpan
         return articles;
     }
 
+    /**
+     * Mengambil konten artikel dari URL menggunakan XPath.
+     *
+     * @param url URL artikel
+     * @return Konten artikel
+     * @throws IOException jika terjadi kesalahan I/O saat pengambilan data
+     */
     private String fetchContentFromUrlWithXPath(String url) throws IOException {
         try (WebClient webClient = new WebClient(BrowserVersion.INTERNET_EXPLORER)) {
+            // Konfigurasi WebClient untuk menonaktifkan JavaScript dan CSS
             webClient.getOptions().setJavaScriptEnabled(false);
             webClient.getOptions().setCssEnabled(false);
-            HtmlPage page = webClient.getPage(url); // Mengambil halaman HTML menggunakan HtmlUnit
-            List<HtmlParagraph> paragraphs = page.getByXPath("//article[@class='detailsContent force-17 mt40']/p"); // Menggunakan XPath untuk menemukan elemen
-
+            // Mengambil halaman HTML menggunakan HtmlUnit
+            HtmlPage page = webClient.getPage(url);
+            // Menggunakan XPath untuk menemukan elemen konten artikel
+            List<HtmlParagraph> paragraphs = page.getByXPath("//article[@class='detailsContent force-17 mt40']/p");
+            // Membangun konten artikel dari teks setiap elemen yang ditemukan
             StringBuilder contentBuilder = new StringBuilder();
             for (HtmlParagraph paragraph : paragraphs) {
                 contentBuilder.append(paragraph.asText()).append("\n"); // Mengambil teks dari setiap elemen yang ditemukan
             }
-            return contentBuilder.toString(); // Mengembalikan konten dalam bentuk string
+            // Mengembalikan konten artikel dalam bentuk string
+            return contentBuilder.toString();
         }
     }
 }

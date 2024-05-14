@@ -14,6 +14,9 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Kelas pengujian untuk menguji fungsionalitas terkait berita.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class NewsscraperApplicationTests {
 
@@ -26,6 +29,10 @@ class NewsscraperApplicationTests {
 	@Autowired
 	private ArticleRepository articleRepository;
 
+
+	/**
+	 * Kasus uji untuk mengambil endpoint artikel.
+	 */
 	@Test
 	void testFetchArticlesEndpoint() {
 		// Persiapkan data uji
@@ -37,7 +44,7 @@ class NewsscraperApplicationTests {
 		articleRepository.save(article);
 
 		// Kirim permintaan GET ke endpoint fetchArticles
-		ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/news/fetch", String.class);
+		ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/news/fetch-rss", String.class);
 
 		// Verifikasi bahwa permintaan berhasil (kode status 200)
 		assertEquals(HttpStatus.OK, response.getStatusCode());
