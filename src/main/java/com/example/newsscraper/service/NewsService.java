@@ -27,28 +27,47 @@ public class NewsService {
     private ArticleRepository articleRepository;
 
     public List<Article> fetchArticlesFromRss() throws IOException {
+        // Membuat daftar kosong untuk menyimpan artikel yang diambil dari RSS feed
         List<Article> articles = new ArrayList<>();
+
+        // Mengambil dokumen HTML dari URL RSS feed menggunakan Jsoup
         Document doc = Jsoup.connect("https://jambi.antaranews.com/rss/terkini.xml").get();
+
+        // Iterasi melalui setiap elemen <item> dalam dokumen RSS untuk mendapatkan informasi artikel
         for (Element item : doc.select("item")) {
+            // Mengambil URL, judul, dan konten artikel dari elemen <item>
             String url = item.select("link").text();
             String title = item.select("title").text();
+
+            // Mengambil tanggal publikasi artikel dari elemen <pubDate> dan mem-parsingnya
             String pubDateStr = item.select("pubDate").text();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
             LocalDateTime pubDate = LocalDateTime.parse(pubDateStr, formatter);
             LocalDate publishedDate = pubDate.toLocalDate();
 
-            long articleTimestamp = Instant.now().getEpochSecond(); // Menggunakan waktu saat ini sebagai timestamp artikel
+            // Mengambil konten artikel dari elemen <description> dan membersihkannya dari tag HTML
+            String content = item.select("description").text();
+            String cleanedContent = Jsoup.parse(content).text();
 
+            // Menggunakan waktu saat ini sebagai timestamp untuk artikel
+            long articleTimestamp = Instant.now().getEpochSecond();
+
+            // Membuat objek Article dari informasi yang diambil
             Article article = new Article();
             article.setUrl(url);
             article.setTitle(title);
             article.setArticleTs(articleTimestamp);
-            article.setContent(fetchContentFromUrl(url));
+            article.setContent(cleanedContent);
             article.setPublishedDate(publishedDate);
 
+            // Menambahkan artikel ke dalam daftar artikel
             articles.add(article);
+
+            // Menyimpan artikel ke dalam basis data menggunakan repository articleRepository
             articleRepository.save(article);
         }
+
+        // Mengembalikan daftar artikel yang telah diambil dan disimpan
         return articles;
     }
 
@@ -74,12 +93,6 @@ public class NewsService {
             articles.add(article);
         }
         return articles;
-    }
-
-    private String fetchContentFromUrl(String url) throws IOException {
-        // Mengambil konten artikel dari URL menggunakan Jsoup
-        Document document = Jsoup.connect(url).get();
-        return document.select(".article-content").text();
     }
 
     private String fetchContentFromUrlWithXPath(String url) throws IOException {
