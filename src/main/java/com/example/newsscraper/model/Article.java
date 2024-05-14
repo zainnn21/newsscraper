@@ -30,6 +30,7 @@ public class Article {
     private String url;
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     @Lob

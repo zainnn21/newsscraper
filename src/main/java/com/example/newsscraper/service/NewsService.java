@@ -3,6 +3,7 @@ package com.example.newsscraper.service;
 
 import com.example.newsscraper.model.Article;
 import com.example.newsscraper.repository.ArticleRepository;
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlParagraph;
@@ -79,7 +80,6 @@ public class NewsService {
         List<Article> articles = new ArrayList<>();
         Document document = Jsoup.connect("https://www.bisnis.com/index").get();
         for (Element item : document.select(".col-custom.left")) {
-
             String url = item.select(".col-sm-8 a").attr("href");
             String title = item.select(".col-sm-8 a").attr("title");
 //            String publishedDt = item.select("h2").attr("small");
@@ -90,13 +90,16 @@ public class NewsService {
 
             long articleTimestamp = Instant.now().getEpochSecond();
 
+            if (articleRepository.existsByUrl(url)){
+                System.out.println("URL already exists, skipping: " + url);
+                continue; // Skip proses insert dan lanjut ke looping berikutnya
+            }
             Article article = new Article();
             article.setUrl(url);
             article.setTitle(title);
             article.setArticleTs(articleTimestamp);
 //            article.setPublishedDate(pubDt);
             article.setContent(fetchContentFromUrlWithXPath(url));
-
             articles.add(article);
             articleRepository.save(article);
         }
@@ -104,7 +107,9 @@ public class NewsService {
     }
 
     private String fetchContentFromUrlWithXPath(String url) throws IOException {
-        try (WebClient webClient = new WebClient()) {
+        try (WebClient webClient = new WebClient(BrowserVersion.INTERNET_EXPLORER)) {
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getOptions().setCssEnabled(false);
             HtmlPage page = webClient.getPage(url); // Mengambil halaman HTML menggunakan HtmlUnit
             List<HtmlParagraph> paragraphs = page.getByXPath("//article[@class='detailsContent force-17 mt40']/p"); // Menggunakan XPath untuk menemukan elemen
 
