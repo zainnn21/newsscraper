@@ -3,6 +3,9 @@ package com.example.newsscraper.service;
 
 import com.example.newsscraper.model.Article;
 import com.example.newsscraper.repository.ArticleRepository;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlParagraph;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -74,37 +77,38 @@ public class NewsService {
 
     public List<Article> fetchArticlesFromIndex() throws IOException {
         List<Article> articles = new ArrayList<>();
-        // Mengambil dokumen RSS dari URL
-        Document document = Jsoup.connect("https://jambi.antaranews.com/rss/terkini.xml").get();
-        // Mengiterasi setiap item di RSS feed
-        for (Element item : document.select("item")) {
-            String url = item.select("link").text();
-            String title = item.select("title").text();
-            String pubDate = item.select("pubDate").text();
-            long articleTimestamp = Instant.now().getEpochSecond(); // Menggunakan waktu saat ini sebagai timestamp artikel
+        Document document = Jsoup.connect("https://www.bisnis.com/index").get();
+        for (Element item : document.select(".col-sm-8 a")) {
+
+            String url = item.select("a").attr("href");
+            String title = item.select("a").attr("title");
+
+            // Menggunakan waktu saat ini sebagai timestamp untuk artikel
+            long articleTimestamp = Instant.now().getEpochSecond();
 
             Article article = new Article();
             article.setUrl(url);
             article.setTitle(title);
             article.setArticleTs(articleTimestamp);
-            article.setPublishedDate(LocalDate.parse(pubDate));
-            article.setContent(fetchContentFromUrlWithXPath(url));
+            article.setContent("");
 
             articles.add(article);
+            articleRepository.save(article);
         }
         return articles;
     }
 
     private String fetchContentFromUrlWithXPath(String url) throws IOException {
-        Document doc = Jsoup.connect(url).get(); // Mengambil halaman HTML menggunakan Jsoup
-        String xpathExpression = "//article[@class='detailsContent force-17 mt40']/p"; // XPath untuk elemen yang berisi konten artikel
-        Elements elements = doc.select(xpathExpression); // Menggunakan XPath untuk menemukan elemen
+        try (WebClient webClient = new WebClient()) {
+            HtmlPage page = webClient.getPage(url); // Mengambil halaman HTML menggunakan HtmlUnit
+            List<HtmlParagraph> paragraphs = page.getByXPath("//article[@class='detailsContent force-17 mt40']/p"); // Menggunakan XPath untuk menemukan elemen
 
-        StringBuilder contentBuilder = new StringBuilder();
-        for (Element element : elements) {
-            contentBuilder.append(element.text()).append("\n"); // Mengambil teks dari setiap elemen yang ditemukan
+            StringBuilder contentBuilder = new StringBuilder();
+            for (HtmlParagraph paragraph : paragraphs) {
+                contentBuilder.append(paragraph.asText()).append("\n"); // Mengambil teks dari setiap elemen yang ditemukan
+            }
+            return contentBuilder.toString(); // Mengembalikan konten dalam bentuk string
         }
-        return contentBuilder.toString(); // Mengembalikan konten dalam bentuk string
     }
 }
 
