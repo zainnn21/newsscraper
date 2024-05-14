@@ -7,6 +7,7 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlParagraph;
+import jakarta.transaction.Transactional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -37,6 +38,7 @@ public class NewsService {
      * @return Daftar artikel yang diambil dari RSS Feed
      * @throws IOException jika terjadi kesalahan I/O saat pengambilan data
      */
+    @Transactional
     public List<Article> fetchArticlesFromRss() throws IOException {
         // Membuat daftar kosong untuk menyimpan artikel yang diambil dari RSS feed
         List<Article> articles = new ArrayList<>();
@@ -48,6 +50,10 @@ public class NewsService {
         for (Element item : doc.select("item")) {
             // Mengambil URL, judul, dan konten artikel dari elemen <item>
             String url = item.select("link").text();
+            if(articleRepository.existsByUrl(url)){
+                System.out.println("URL already exists, skipping: " + url);
+                continue;
+            }
             String title = item.select("title").text();
 
             // Mengambil tanggal publikasi artikel dari elemen <pubDate> dan mem-parsingnya
@@ -76,6 +82,7 @@ public class NewsService {
 
             // Menyimpan artikel ke dalam basis data menggunakan repository articleRepository
             articleRepository.save(article);
+            System.out.println("Success Insert Data: "+ article);
         }
 
         // Mengembalikan daftar artikel yang telah diambil dan disimpan
@@ -89,6 +96,7 @@ public class NewsService {
      * @return Daftar artikel yang diambil dari halaman indeks
      * @throws IOException jika terjadi kesalahan I/O saat pengambilan data
      */
+    @Transactional
     public List<Article> fetchArticlesFromIndex() throws IOException {
         List<String> urls = new ArrayList<>();
         List<Article> articles = new ArrayList<>();
@@ -121,6 +129,7 @@ public class NewsService {
             article.setContent(fetchContentFromUrlWithXPath(url));
             articles.add(article);
             articleRepository.save(article);
+            System.out.println("Success Insert Data: "+ article);
         }
         // Mengembalikan daftar artikel yang telah diambil dan disimpan
         return articles;
