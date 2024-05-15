@@ -47,7 +47,7 @@ You can use the following SQL script to create the necessary tables:
 ### Run the Application with Docker:
 
 1. Navigate to the project directory:
-`cd news-scraper`
+`cd newsscraper`
 2. Build and start the Docker containers using Docker Compose:
 `docker-compose up --build`
 
