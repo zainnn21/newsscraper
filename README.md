@@ -21,7 +21,7 @@ NewsScraper is an application used to fetch and store news articles from various
 ### Clone the Repository:
 Run the following command to clone the repository:
 `
-git clone https://github.com/zainnn21/newsscraper
+https://github.com/zainnn21/newsscraper.git
 `
 
 ### Configure the Database:
